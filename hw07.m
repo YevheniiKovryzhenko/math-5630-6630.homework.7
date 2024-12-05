@@ -1,4 +1,4 @@
-% Author: Your Name / your_email
+% Author: Yevhenii Kovryzhenko / yzk0058@auburn.edu
 % Date: 2024-09-01
 % Assignment Name: hw07
 
@@ -9,39 +9,64 @@ classdef hw07
             % Solves the ODE y' = f(t, y) with initial condition y(t0) = y0 using the specified method (euler, rk4, midpoint).
             % over the interval tspan=[a, b] with n_steps. The function f(t, y) is provided as a function handle. 
             % 
-            %:param func: function handle f(t, y) that defines the ODE y' = f(t, y)
-            %:param y0: initial condition y(t0) = y0
-            %:param tspan: interval [a, b] over which to solve the ODE
-            %:param n_steps: number of steps to take to solve the ODE, interval size = (b-a)/n_steps.
-            %:param method: string that specifies the method to use. It can be 'euler', 'midpoint', or 'rk4'
+            % :param func: function handle f(t, y) that defines the ODE y' = f(t, y)
+            % :param y0: initial condition y(t0) = y0
+            % :param tspan: interval [a, b] over which to solve the ODE
+            % :param n_steps: number of steps to take to solve the ODE, interval size = (b-a)/n_steps.
+            % :param method: string that specifies the method to use. It can be 'euler', 'midpoint', or 'rk4'
             %
-            %:return: none, but plots the solution y(t) over the interval tspan
+            % :return: plots the solution y(t) over the interval tspan
             
-            % Your implementation here. Euler method is implemented for an example. Implement the other methods.
-
+            % Extract the time interval
             t0 = tspan(1); 
             tf = tspan(2); 
             
+            % Step size
             h = (tf - t0) / n_steps; 
-            t = t0:h:tf; 
-            y = zeros(1, length(t)); 
             
-            y(1) = y0;
-
+            % Time grid
+            t = t0:h:tf; 
+            
+            % Initialize solution array
+            y = zeros(1, length(t)); 
+            y(1) = y0;  % Initial condition
+        
+            % Solver implementation based on the chosen method
             if strcmp(method, 'euler')
+                % Euler Method
                 for i = 1:n_steps
                     k1 = func(t(i), y(i));
                     y(i+1) = y(i) + h * k1;
-                end  
-            elseif strcmp(method, 'rk4')
-                % your code for Runge-Kutta 4 method here
-
+                end
+                
             elseif strcmp(method, 'midpoint')
-                % your code for Midpoint method here
-
+                % Midpoint Method
+                for i = 1:n_steps
+                    k1 = func(t(i), y(i));
+                    y_mid = y(i) + (h / 2) * k1;
+                    k2 = func(t(i) + h / 2, y_mid);
+                    y(i+1) = y(i) + h * k2;
+                end
+                
+            elseif strcmp(method, 'rk4')
+                % Runge-Kutta 4 Method
+                for i = 1:n_steps
+                    k1 = func(t(i), y(i));
+                    k2 = func(t(i) + h / 2, y(i) + h / 2 * k1);
+                    k3 = func(t(i) + h / 2, y(i) + h / 2 * k2);
+                    k4 = func(t(i) + h, y(i) + h * k3);
+                    y(i+1) = y(i) + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
+                end
+                
             else
                 error('Invalid method. Choose "euler", "rk4", or "midpoint".');
             end
+        
+            % Plot the solution
+            plot(t, y, '-o', 'LineWidth', 1.5);
+            xlabel('t'); ylabel('y(t)');
+            title(['Solution using ', method, ' method']);
+            grid on;
         end
 
         function p2(method)
@@ -61,10 +86,20 @@ classdef hw07
             % Observe the solution and error plots for the numerical solutions with different step sizes. Write your observations in the comments. 
 
             % Your comment here (e.g, how does the error change with step size and the time span, etc.): 
+            % Euler: demostrates 1st order convergence; 
+            % increase in step size increases the convergence error; 
+            % 3rd function solution diverges at the end of the interval from the true solution  
             % 
-            % 
-            % 
+            % Midpoint: demostrates 2nd order convergence;
+            % increase in step size increases the convergence error; 
+            % 3rd function solution diverges at the end of the interval from the true solution  
             %
+            % rk4: demostrates 4th order convergence;
+            % increase in step size increases the convergence error;
+            % 3rd function solution no longer diverges from the true
+            % solution;
+            % the error is much lower than for all previous methods is
+            % closely aligned with theoretical O(h^4) error estimate
             %
 
             f = @(t, y) t * (y - t * sin(t));
@@ -115,29 +150,51 @@ classdef hw07
             %
             % Your comment here (e.g, how does the error change with step size and the time span, is there a clear difference in the running time and error (you may need to run a few times to conclude), etc.): 
             % 
-            %
+            % It is clear that the 3/8 rule has much larger errors but
+            % takes less time to compute. 3/8 rule no longer achieves 4th
+            % order convergence.
             %
             %
             %
 
             function y = rk4_38_rule(func, y0, tspan, n_steps)
-                % rk4_38_rule: Runge-Kutta method with 4th order and 3/8 rule for a system of ODEs.
-                %:param func: function handle f(t, y) that defines the ODE y' = f(t, y)
-                %:param y0: initial condition y(t0) = y0
-                %:param tspan: interval [a, b] over which to solve the ODE
-                %:param n_steps: number of steps to take to solve the ODE, interval size = (b-a)/n_steps.
+                % rk4_38_rule: Runge-Kutta method with 4th order and 3/8 rule for solving ODEs.
+                %
+                % :param func: function handle f(t, y) that defines the ODE y' = f(t, y)
+                % :param y0: initial condition y(t0) = y0
+                % :param tspan: interval [a, b] over which to solve the ODE
+                % :param n_steps: number of steps to take to solve the ODE, interval size = (b-a)/n_steps
+                %
+                % :return: y - solution values at each time step
 
-                t0 = tspan(1); 
-                tf = tspan(2); 
-                
-                h = (tf - t0) / n_steps; 
-                t = t0:h:tf; 
-                y = zeros(1, length(t)); 
-                
+                % Extract interval
+                t0 = tspan(1);
+                tf = tspan(2);
+
+                % Step size
+                h = (tf - t0) / n_steps;
+
+                % Time vector
+                t = t0:h:tf;
+
+                % Initialize solution vector
+                y = zeros(1, length(t));
                 y(1) = y0;
 
-                % write your code here.
+                % RK4 3/8 Rule implementation
+                for i = 1:n_steps
+                    % Compute stages
+                    k1 = func(t(i), y(i));
+                    k2 = func(t(i) + h/3, y(i) + h*k1/3);
+                    k3 = func(t(i) + 2*h/3, y(i) + 2*h*k2/3);
+                    k4 = func(t(i) + h, y(i) + h*k1 - h*k2 + h*k3);
+
+                    % Update solution
+                    y(i+1) = y(i) + (h/8) * (k1 + 3*k2 + 3*k3 + k4);
+                end
             end
+
+
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %
